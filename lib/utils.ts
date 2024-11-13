@@ -1,11 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable prefer-const */
 /* eslint-disable no-prototype-builtins */
-/* eslint-disable prefer-spread */
 import { type ClassValue, clsx } from "clsx";
 import qs from "qs";
 import { twMerge } from "tailwind-merge";
+
 import { aspectRatioOptions } from "@/constants";
 
 export function cn(...inputs: ClassValue[]) {
@@ -15,12 +13,15 @@ export function cn(...inputs: ClassValue[]) {
 // ERROR HANDLER
 export const handleError = (error: unknown) => {
   if (error instanceof Error) {
+    // This is a native JavaScript error (e.g., TypeError, RangeError)
     console.error(error.message);
     throw new Error(`Error: ${error.message}`);
   } else if (typeof error === "string") {
+    // This is a string error message
     console.error(error);
     throw new Error(`Error: ${error}`);
   } else {
+    // This is an unknown type of error
     console.error(error);
     throw new Error(`Unknown error: ${JSON.stringify(error)}`);
   }
@@ -56,11 +57,7 @@ export const formUrlQuery = ({
   searchParams,
   key,
   value,
-}: {
-  searchParams: URLSearchParams;
-  key: string;
-  value: string;
-}) => {
+}: FormUrlQueryParams) => {
   const params = { ...qs.parse(searchParams.toString()), [key]: value };
 
   return `${window.location.pathname}?${qs.stringify(params, {
@@ -72,10 +69,7 @@ export const formUrlQuery = ({
 export function removeKeysFromQuery({
   searchParams,
   keysToRemove,
-}: {
-  searchParams: URLSearchParams;
-  keysToRemove: string[];
-}) {
+}: RemoveUrlQueryParams) {
   const currentUrl = qs.parse(searchParams);
 
   keysToRemove.forEach((key) => {
@@ -99,7 +93,7 @@ export const debounce = (func: (...args: any[]) => void, delay: number) => {
   };
 };
 
-// GET IMAGE SIZE
+// GE IMAGE SIZE
 export type AspectRatioKey = keyof typeof aspectRatioOptions;
 export const getImageSize = (
   type: string,
