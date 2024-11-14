@@ -1,3 +1,5 @@
+/* eslint-disable prefer-const */
+/* eslint-disable no-prototype-builtins */
 import { type ClassValue, clsx } from "clsx";
 import qs from "qs";
 import { twMerge } from "tailwind-merge";
@@ -11,12 +13,15 @@ export function cn(...inputs: ClassValue[]) {
 // ERROR HANDLER
 export const handleError = (error: unknown) => {
   if (error instanceof Error) {
+    // This is a native JavaScript error (e.g., TypeError, RangeError)
     console.error(error.message);
     throw new Error(`Error: ${error.message}`);
   } else if (typeof error === "string") {
+    // This is a string error message
     console.error(error);
     throw new Error(`Error: ${error}`);
   } else {
+    // This is an unknown type of error
     console.error(error);
     throw new Error(`Unknown error: ${JSON.stringify(error)}`);
   }
@@ -45,12 +50,7 @@ const toBase64 = (str: string) =>
 export const dataUrl = `data:image/svg+xml;base64,${toBase64(
   shimmer(1000, 1000)
 )}`;
-
-interface FormUrlQueryParams {
-  searchParams: URLSearchParams;
-  key: string;
-  value: string | number | boolean;
-}
+// ==== End
 
 // FORM URL QUERY
 export const formUrlQuery = ({
@@ -58,32 +58,25 @@ export const formUrlQuery = ({
   key,
   value,
 }: FormUrlQueryParams) => {
-  const params = { 
-    ...qs.parse(searchParams.toString()), 
-    [key]: value 
-  };
+  const params = { ...qs.parse(searchParams.toString()), [key]: value };
 
   return `${window.location.pathname}?${qs.stringify(params, {
     skipNulls: true,
   })}`;
 };
 
-interface RemoveUrlQueryParams {
-  searchParams: URLSearchParams;
-  keysToRemove: string[];
-}
-
 // REMOVE KEY FROM QUERY
 export function removeKeysFromQuery({
   searchParams,
   keysToRemove,
 }: RemoveUrlQueryParams) {
-  const currentUrl = qs.parse(searchParams.toString());
+  const currentUrl = qs.parse(searchParams);
 
   keysToRemove.forEach((key) => {
     delete currentUrl[key];
   });
 
+  // Remove null or undefined values
   Object.keys(currentUrl).forEach(
     (key) => currentUrl[key] == null && delete currentUrl[key]
   );
@@ -92,30 +85,19 @@ export function removeKeysFromQuery({
 }
 
 // DEBOUNCE
-export const debounce = <T extends (...args: unknown[]) => void>(
-  func: T,
-  delay: number
-) => {
+export const debounce = (func: (...args: any[]) => void, delay: number) => {
   let timeoutId: NodeJS.Timeout | null;
-  
-  return (...args: Parameters<T>) => {
+  return (...args: any[]) => {
     if (timeoutId) clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => func(...args), delay);
+    timeoutId = setTimeout(() => func.apply(null, args), delay);
   };
 };
 
-// GET IMAGE SIZE
+// GE IMAGE SIZE
 export type AspectRatioKey = keyof typeof aspectRatioOptions;
-
-interface ImageDimensions {
-  width?: number;
-  height?: number;
-  aspectRatio?: AspectRatioKey;
-}
-
 export const getImageSize = (
   type: string,
-  image: ImageDimensions,
+  image: any,
   dimension: "width" | "height"
 ): number => {
   if (type === "fill") {
@@ -145,37 +127,28 @@ export const download = (url: string, filename: string) => {
       document.body.appendChild(a);
       a.click();
     })
-    .catch((error) => console.error({ error }));
+    .catch((error) => console.log({ error }));
 };
 
 // DEEP MERGE OBJECTS
-type DeepMergeable = Record<string, unknown>;
-
-export const deepMergeObjects = <T extends DeepMergeable>(
-  obj1: T,
-  obj2: T | null | undefined
-): T => {
-  if (obj2 === null || obj2 === undefined) {
+export const deepMergeObjects = (obj1: any, obj2: any) => {
+  if(obj2 === null || obj2 === undefined) {
     return obj1;
   }
 
-  const output = { ...obj2 } as T;
+  let output = { ...obj2 };
 
-  for (const key in obj1) {
-    if (Object.prototype.hasOwnProperty.call(obj1, key)) {
-      const typedKey = key as keyof T;
+  for (let key in obj1) {
+    if (obj1.hasOwnProperty(key)) {
       if (
-        obj1[typedKey] &&
-        typeof obj1[typedKey] === "object" &&
-        obj2[typedKey] &&
-        typeof obj2[typedKey] === "object"
+        obj1[key] &&
+        typeof obj1[key] === "object" &&
+        obj2[key] &&
+        typeof obj2[key] === "object"
       ) {
-        output[typedKey] = deepMergeObjects(
-          obj1[typedKey] as DeepMergeable,
-          obj2[typedKey] as DeepMergeable
-        ) as T[keyof T];
+        output[key] = deepMergeObjects(obj1[key], obj2[key]);
       } else {
-        output[typedKey] = obj1[typedKey];
+        output[key] = obj1[key];
       }
     }
   }
