@@ -1,5 +1,4 @@
-
-import { Document, Schema, model, models } from "mongoose";
+import { Document, Schema, model, models, Model } from "mongoose";
 
 export interface IImage extends Document {
   title: string;
@@ -8,7 +7,7 @@ export interface IImage extends Document {
   secureURL: string; 
   width?: number;
   height?: number;
-  config?: object; 
+  config?: Record<string, unknown>; 
   transformationUrl?: string; 
   aspectRatio?: string;
   color?: string;
@@ -22,7 +21,7 @@ export interface IImage extends Document {
   updatedAt?: Date;
 }
 
-const ImageSchema = new Schema({
+const ImageSchema = new Schema<IImage>({
   title: { type: String, required: true },
   transformationType: { type: String, required: true },
   publicId: { type: String, required: true },
@@ -37,8 +36,11 @@ const ImageSchema = new Schema({
   author: { type: Schema.Types.ObjectId, ref: 'User' },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
+}, {
+  timestamps: true // This will automatically handle createdAt and updatedAt
 });
 
-const Image = models?.Image || model('Image', ImageSchema);
+// Check if the model exists before creating a new one
+const Image: Model<IImage> = models?.Image || model<IImage>('Image', ImageSchema);
 
 export default Image;

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose, { Mongoose } from 'mongoose';
 
 const MONGODB_URL = process.env.MONGODB_URL;
@@ -8,26 +7,28 @@ interface MongooseConnection {
   promise: Promise<Mongoose> | null;
 }
 
-let cached: MongooseConnection = (global as any).mongoose
+// Declare global type for mongoose cache
+declare global {
+  var mongoose: { conn: Mongoose | null; promise: Promise<Mongoose> | null } | undefined;
+}
 
-if(!cached) {
-  cached = (global as any).mongoose = { 
-    conn: null, 
-    promise: null 
-  }
+let cached: MongooseConnection = global.mongoose || { conn: null, promise: null };
+
+if (!global.mongoose) {
+  global.mongoose = cached;
 }
 
 export const connectToDatabase = async () => {
-  if(cached.conn) return cached.conn;
+  if (cached.conn) return cached.conn;
 
-  if(!MONGODB_URL) throw new Error('Missing MONGODB_URL');
+  if (!MONGODB_URL) throw new Error('Missing MONGODB_URL');
 
   cached.promise = 
     cached.promise || 
     mongoose.connect(MONGODB_URL, { 
       dbName: 'Visor', 
       bufferCommands: false 
-    })
+    });
 
   cached.conn = await cached.promise;
 
