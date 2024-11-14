@@ -49,7 +49,7 @@ export const dataUrl = `data:image/svg+xml;base64,${toBase64(
 interface FormUrlQueryParams {
   searchParams: URLSearchParams;
   key: string;
-  value: string;
+  value: string | number | boolean;
 }
 
 // FORM URL QUERY
@@ -58,7 +58,10 @@ export const formUrlQuery = ({
   key,
   value,
 }: FormUrlQueryParams) => {
-  const params = { ...qs.parse(searchParams.toString()), [key]: value };
+  const params = { 
+    ...qs.parse(searchParams.toString()), 
+    [key]: value 
+  };
 
   return `${window.location.pathname}?${qs.stringify(params, {
     skipNulls: true,
@@ -75,7 +78,7 @@ export function removeKeysFromQuery({
   searchParams,
   keysToRemove,
 }: RemoveUrlQueryParams) {
-  const currentUrl = qs.parse(searchParams);
+  const currentUrl = qs.parse(searchParams.toString());
 
   keysToRemove.forEach((key) => {
     delete currentUrl[key];
@@ -146,7 +149,9 @@ export const download = (url: string, filename: string) => {
 };
 
 // DEEP MERGE OBJECTS
-export const deepMergeObjects = <T extends Record<string, unknown>>(
+type DeepMergeable = Record<string, unknown>;
+
+export const deepMergeObjects = <T extends DeepMergeable>(
   obj1: T,
   obj2: T | null | undefined
 ): T => {
@@ -154,22 +159,23 @@ export const deepMergeObjects = <T extends Record<string, unknown>>(
     return obj1;
   }
 
-  let output = { ...obj2 } as T;
+  const output = { ...obj2 } as T;
 
-  for (let key in obj1) {
+  for (const key in obj1) {
     if (Object.prototype.hasOwnProperty.call(obj1, key)) {
+      const typedKey = key as keyof T;
       if (
-        obj1[key] &&
-        typeof obj1[key] === "object" &&
-        obj2[key] &&
-        typeof obj2[key] === "object"
+        obj1[typedKey] &&
+        typeof obj1[typedKey] === "object" &&
+        obj2[typedKey] &&
+        typeof obj2[typedKey] === "object"
       ) {
-        output[key] = deepMergeObjects(
-          obj1[key] as Record<string, unknown>,
-          obj2[key] as Record<string, unknown>
+        output[typedKey] = deepMergeObjects(
+          obj1[typedKey] as DeepMergeable,
+          obj2[typedKey] as DeepMergeable
         ) as T[keyof T];
       } else {
-        output[key] = obj1[key];
+        output[typedKey] = obj1[typedKey];
       }
     }
   }
