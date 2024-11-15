@@ -9,7 +9,6 @@ import { createUser, deleteUser, updateUser } from "@/lib/actions/user.actions";
 
 export async function POST(req: Request) {
 
-  
   const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
 
   if (!WEBHOOK_SECRET) {
@@ -73,9 +72,12 @@ export async function POST(req: Request) {
 
     const newUser = await createUser(user);
 
+    // Ensure clerkClient is called to get the actual ClerkClient instance
+    const client = await clerkClient();
+
     // Set public metadata
     if (newUser) {
-      await clerkClient.users.updateUserMetadata(id, {
+      await client.users.updateUserMetadata(id, {
         publicMetadata: {
           userId: newUser._id,
         },
